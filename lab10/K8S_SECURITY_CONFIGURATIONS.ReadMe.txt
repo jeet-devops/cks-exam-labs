@@ -1,1 +1,34 @@
 #Docker file
+
+FROM alpine:3.13.5 ## Dont use latest, instead use a tag/version
+
+USER root
+COPY sunnydale.sh .
+
+USER nobody ## use user with less priv instead of root user
+CMD ["./sunnydale.sh"]
+
+
+## YAML file 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scooby-gang
+  namespace: sunnydale
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: scooby
+  template:
+    metadata:
+      labels:
+        app: scooby
+    spec:
+      containers:
+      - name: scoobygang
+        image: scoobygang:1.4.0
+        securityContext:
+          privileged: false  ## use no priv security context  
+          runAsUser: 65534 ## use non root user id

@@ -1,0 +1,74 @@
+## Create Pod Secuity Policy
+
+cloud_user@k8s-cli:~$ cat nopriv-psp.yml 
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: nopriv-psp
+spec:
+  privileged: false
+  runAsUser:
+    rule: "RunAsAny"
+  fsGroup:
+    rule: "RunAsAny"
+  seLinux:
+    rule: "RunAsAny"
+  supplementalGroups:
+    rule: "RunAsAny"
+
+## Create ServiceAccount
+
+cloud_user@k8s-cli:~$ cat hoth-sa
+cat: hoth-sa: No such file or directory
+cloud_user@k8s-cli:~$ cat hoth-sa.yml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "hoth-sa"
+  namespace: hoth
+
+## Create a cluster role to use the pod security policy 
+
+cloud_user@k8s-cli:~$ cat use-nopriv-psp.yml 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: use-nopriv-psp
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames: ["nopriv-psp"]
+
+## Create Cluster role binding between Cluster Role and Service Account 
+
+cloud_user@k8s-cli:~$ cat hoth-sa-use-nopriv-psp.yml 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hoth-sa-use-nopriv-psp
+roleRef:
+  kind: ClusterRole
+  name: use-nopriv-psp
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: hoth-sa
+  namespace: hoth
+
+## Pod to validate the Security policy check - use the service account(with Cluster role binding with psp use cluster role) for the pod
+
+cloud_user@k8s-cli:~$ cat luke.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: luke
+  namespace: hoth
+spec:
+  serviceAccount: hoth-sa
+  containers:
+  - name: busybox
+    image: busybox:1.33.1
+    command: ['sh', '-c', 'while true; do sleep 5; done']
+    securityContext:
+      privileged: true
