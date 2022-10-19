@@ -1,0 +1,29 @@
+## Create a new Falco Rule
+
+cloud_user@k8s-worker1:~$ cat monitor.yaml 
+- rule: spawned_process_monitor_container
+  desc: spawned process in monitor container
+  condition: container.name = "monitor" and evt.type = execve
+  output: "%evt.time, %container.id, %container.image, %user.uid, %proc.name"
+  priority: NOTICE
+
+
+## RUN Falco rule on worker node
+
+sudo falco -M 45 -r monitor.yaml > falco-output.log
+
+## Falco Rule output 
+cloud_user@k8s-worker1:~$ cat falco-output.log 
+15:02:34.784329990: Notice 15:02:34.784329990, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sh
+15:02:34.784456835: Notice 15:02:34.784456835, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, cat
+15:02:34.785155470: Notice 15:02:34.785155470, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sh
+15:02:34.785236094: Notice 15:02:34.785236094, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sleep
+15:03:04.785660857: Notice 15:03:04.785660857, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sh
+15:03:04.785753190: Notice 15:03:04.785753190, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, cat
+15:03:04.786077902: Notice 15:03:04.786077902, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sh
+15:03:04.786206896: Notice 15:03:04.786206896, 12a0c0ba35a7, docker.io/library/busybox:1.33.1, 0, sleep
+Events detected: 8
+Rule counts by severity:
+   NOTICE: 8
+Triggered rules by rule name:
+   spawned_process_monitor_container: 8

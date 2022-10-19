@@ -1,0 +1,52 @@
+## AppArmor profile 
+
+#include <tunables/global>
+profile k8s-deny-write flags=(attach_disconnected) {
+  #include <abstractions/base>
+  file,
+  # Deny all file writes.
+  deny /** w,
+}
+
+## Apply apparmor profile 
+
+apparmor_parser k8s-deny-write
+
+// Add Annotations to use apparmor profile in the pod spec
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chewbacca
+  namespace: kashyyyk
+  annotations:
+    container.apparmor.security.beta.kubernetes.io/busybox: localhost/k8s-deny-write
+spec:
+  containers:
+  - name: busybox
+    image: busybox:1.33.1
+    command: ['sh', '-c', 'while true; do echo hunter2 > password.txt; sleep 5; done']
+~                                                                                      
+
+
+#enforced apparmor profile
+
+cloud_user@k8s-cli:~$ k -n kashyyyk logs pod/chewbacca 
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied
+sh: can't create password.txt: Permission denied

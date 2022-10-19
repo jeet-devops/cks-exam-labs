@@ -1,0 +1,33 @@
+cat sandbox.yml 
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: "sandbox"
+handler: "runsc"
+
+
+
+spec:
+      containers:
+      - command:
+        - sh
+        - -c
+        - while true; do sleep 5; done
+        image: busybox:1.33.1
+        imagePullPolicy: IfNotPresent
+        name: busybox
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      runtimeClassName: sandbox
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+
+
+## check runtimeClass
+
+k -n sunnydale exec pod/<podname> -- dmesg
